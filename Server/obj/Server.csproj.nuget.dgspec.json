@@ -52,10 +52,6 @@
               "target": "Package",
               "version": "[12.5.0, )"
             },
-            "MediatR.Extensions.Microsoft.DependencyInjection": {
-              "target": "Package",
-              "version": "[11.1.0, )"
-            },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[9.0.3, )"
@@ -79,10 +75,6 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[9.0.3, )"
-            },
-            "Pomelo.EntityFrameworkCore.MySql": {
-              "target": "Package",
-              "version": "[8.0.3, )"
             }
           },
           "imports": [
