@@ -1,7 +1,34 @@
 using System.Net;
 using Microsoft.EntityFrameworkCore;
-using Server.Data;
-using Server.Models;
+
+// Define User model
+public class User
+{
+    public string username { get; set; }
+    public string email { get; set; }
+}
+
+// Define ApplicationDbContext
+public class ApplicationDbContext : DbContext
+{
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options)
+    {
+    }
+
+    public DbSet<User> Users { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Configure the User entity to map to the "employee" table
+        modelBuilder.Entity<User>().ToTable("employee");
+        
+        // Since your table doesn't have a primary key defined
+        modelBuilder.Entity<User>().HasNoKey();
+        
+        base.OnModelCreating(modelBuilder);
+    }
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
