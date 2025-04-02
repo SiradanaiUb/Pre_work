@@ -168,3 +168,4 @@
 /Users/tawan/Documents/GitHub/Pre_work/Server/obj/Debug/net9.0/Server.pdb
 /Users/tawan/Documents/GitHub/Pre_work/Server/obj/Debug/net9.0/Server.genruntimeconfig.cache
 /Users/tawan/Documents/GitHub/Pre_work/Server/obj/Debug/net9.0/ref/Server.dll
+/Users/tawan/Documents/GitHub/Pre_work/Server/obj/Debug/net9.0/Server.sourcelink.json
