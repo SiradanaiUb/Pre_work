@@ -58,20 +58,52 @@ namespace backend.Controllers
         public IActionResult CreateCarrier([FromBody] Carrier carrier)
         {
             using SqlConnection con = new SqlConnection(_configuration.GetConnectionString("StoreDbConnection"));
-            using SqlCommand cmd = new SqlCommand("INSERT INTO CarrierInfo (SjpNumber, Carrier_Code, Carrier_Name, Create_Date, Update_Date, Status) VALUES (@SjpNumber, @Carrier_Code, @Carrier_Name, @Create_Date, @Update_Date, @Status)", con);
-            
-            cmd.Parameters.AddWithValue("@SjpNumber", carrier.SjpNumber);
-            cmd.Parameters.AddWithValue("@Carrier_Code", carrier.Carrier_Code);
-            cmd.Parameters.AddWithValue("@Carrier_Name", carrier.Carrier_Name);
-            cmd.Parameters.AddWithValue("@Create_Date", carrier.Create_Date);
-            cmd.Parameters.AddWithValue("@Update_Date", carrier.Update_Date);
-            cmd.Parameters.AddWithValue("@Status", carrier.Status);
-
             con.Open();
+
+            // Step 1: Auto-generate SJP Number (e.g., PRQ-000001)
+            string newSjpNumber = "PRQ-000001";
+            SqlCommand getLastSjpCmd = new SqlCommand("SELECT TOP 1 SJP_Number FROM CarrierInfo WHERE SJP_Number LIKE 'PRQ-%' ORDER BY SJP_Number DESC", con);
+            var lastSjp = getLastSjpCmd.ExecuteScalar()?.ToString();
+
+            if (!string.IsNullOrEmpty(lastSjp) && lastSjp.StartsWith("PRQ-"))
+            {
+                int lastNumber = int.Parse(lastSjp.Substring(4));
+                newSjpNumber = "PRQ-" + (lastNumber + 1).ToString("D6");
+            }
+
+            // Step 2: Auto-generate Carrier_Code (e.g., 00001)
+            string newCarrierCode = "00001";
+            SqlCommand getLastCodeCmd = new SqlCommand("SELECT TOP 1 Carrier_Code FROM CarrierInfo ORDER BY SJP_Number DESC", con);
+            var lastCode = getLastCodeCmd.ExecuteScalar()?.ToString();
+
+            if (!string.IsNullOrEmpty(lastCode) && int.TryParse(lastCode, out int lastNum))
+            {
+                newCarrierCode = (lastNum + 1).ToString("D5");
+            }
+
+            // Step 3: Set timestamps
+            DateTime now = DateTime.Now;
+
+            // Step 4: Insert record
+            SqlCommand cmd = new SqlCommand("INSERT INTO CarrierInfo (SJP_Number, Carrier_Code, Carrier_Name, Create_Date, Update_Date, Status) VALUES (@SjpNumber, @Carrier_Code, @Carrier_Name, @Create_Date, @Update_Date, @Status)", con);
+
+            cmd.Parameters.AddWithValue("@SjpNumber", newSjpNumber);
+            cmd.Parameters.AddWithValue("@Carrier_Code", newCarrierCode);
+            cmd.Parameters.AddWithValue("@Carrier_Name", carrier.Carrier_Name);
+            cmd.Parameters.AddWithValue("@Create_Date", now);
+            cmd.Parameters.AddWithValue("@Update_Date", now);
+            cmd.Parameters.AddWithValue("@Status", "wait for approve");
+
             int rowsAffected = cmd.ExecuteNonQuery();
             con.Close();
 
-            return Ok(new { message = rowsAffected > 0 ? "Carrier Created" : "Failed to Create" });
+            return Ok(new
+            {
+                message = rowsAffected > 0 ? "Carrier Created" : "Failed to Create",
+                SjpNumber = newSjpNumber,
+                Carrier_Code = newCarrierCode,
+                Created_At = now.ToString("yyyy-MM-dd HH:mm:ss")
+            });
         }
         [HttpDelete]
         [Route("DeleteCarrier/{sjpNumber}")]
@@ -156,14 +188,14 @@ namespace backend.Controllers
             getCmd.Parameters.AddWithValue("@SjpNumber", sjpNumber);
             var currentStatus = getCmd.ExecuteScalar()?.ToString()?.ToLower();
 
-            // ✅ First: Block if already rejected
+            // ✅ First: Prevent approval if rejected
             if (currentStatus == "reject")
             {
                 con.Close();
                 return BadRequest(new { message = "status is rejected, cannot approve" });
             }
 
-            // ✅ Second: Normalize missing or invalid status
+            // ✅ Second: Handle empty or invalid status
             if (string.IsNullOrEmpty(currentStatus) || !(new[] { "approve 1", "approve 2", "complete" }.Contains(currentStatus)))
             {
                 currentStatus = "wait for approve";
@@ -175,6 +207,7 @@ namespace backend.Controllers
                 return BadRequest(new { message = "already completed" });
             }
 
+            // ✅ Determine next status
             string nextStatus = currentStatus switch
             {
                 "wait for approve" => "approve 1",
@@ -183,7 +216,18 @@ namespace backend.Controllers
                 _ => "approve 1"
             };
 
-            SqlCommand updateCmd = new SqlCommand("UPDATE CarrierInfo SET Status = @Status, Update_Date = GETDATE() WHERE SJP_Number = @SjpNumber", con);
+            // ✅ Update logic
+            SqlCommand updateCmd;
+            if (nextStatus == "complete")
+            {
+                // Also update Approve_Date
+                updateCmd = new SqlCommand("UPDATE CarrierInfo SET Status = @Status, Approve_Date = GETDATE(), Update_Date = GETDATE() WHERE SJP_Number = @SjpNumber", con);
+            }
+            else
+            {
+                updateCmd = new SqlCommand("UPDATE CarrierInfo SET Status = @Status, Update_Date = GETDATE() WHERE SJP_Number = @SjpNumber", con);
+            }
+
             updateCmd.Parameters.AddWithValue("@SjpNumber", sjpNumber);
             updateCmd.Parameters.AddWithValue("@Status", nextStatus);
             updateCmd.ExecuteNonQuery();

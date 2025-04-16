@@ -1,4 +1,30 @@
-<!-- NG-ZORRO -->
-<a href="https://github.com/NG-ZORRO/ng-zorro-antd" target="_blank" style="display: flex;align-items: center;justify-content: center;height: 100%;width: 100%;">
-  <img height="300" alt="logo" src="https://img.alicdn.com/tfs/TB1X.qJJgHqK1RjSZFgXXa7JXXa-89-131.svg">
-</a>
+<h2>testing the connection</h2>
+
+@for (carrierInfo of carrierInfos; track $index) {
+  <div>
+    <div>
+      SjpNumber: {{ carrierInfo.SjpNumber }}
+    </div>
+    <div>
+      Carrier_Code: {{ carrierInfo.Carrier_Code }}
+    </div>
+    <div>
+      Carrier_Name: {{ carrierInfo.Carrier_Name }}
+    </div>
+    <div>
+      Create_Date: {{ carrierInfo.Create_Date }}
+    </div>
+    <div>
+      Update_Date: {{ carrierInfo.Update_Date }}
+    </div>
+    <div>
+      Status: {{ carrierInfo.Status }}
+    </div>
+    <div>
+      Reject_Reason: {{ carrierInfo.Reject_Reason }}
+    </div>
+    <div>
+      Approve_Date: {{ carrierInfo.Approve_Date }}
+    </div>
+  </div>
+}
