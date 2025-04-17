@@ -1,6 +1,6 @@
 import { Component,inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { CarrierinfoService } from './carrierinfo.service';
+import { CarrierinfoService } from './services/CarrierInfo/carrierinfo.service';
 import {NzTableModule} from 'ng-zorro-antd/table';
 
 @Component({

@@ -1,3 +1,10 @@
+using backend.Commands.ApproveCarrierCommand;
+using backend.Commands.CreateCarrierCommand;
+using backend.Commands.DeleteCarrierCommand;
+using backend.Commands.RejectCarrierCommand;
+using backend.Commands.UpdateCarrierCommand;
+using backend.Queries.GetAllCarriersQuery;
+using backend.Queries.SearchCarriersQuery;
 using backend.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,10 +14,20 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Try registering the concrete implementation first
+// Register repositories
 builder.Services.AddScoped<SqlCarrierRepository>();
-// Then register the interface with the implementation
 builder.Services.AddScoped<ICarrierRepository>(sp => sp.GetRequiredService<SqlCarrierRepository>());
+
+// Register query handlers
+builder.Services.AddScoped<GetAllCarriersQueryHandler>();
+builder.Services.AddScoped<SearchCarriersQueryHandler>();
+
+// Register command handlers
+builder.Services.AddScoped<CreateCarrierCommandHandler>();
+builder.Services.AddScoped<UpdateCarrierCommandHandler>();
+builder.Services.AddScoped<DeleteCarrierCommandHandler>();
+builder.Services.AddScoped<ApproveCarrierCommandHandler>();
+builder.Services.AddScoped<RejectCarrierCommandHandler>();
 
 var allowedOrigins = builder.Configuration.GetValue<string>("allowOrigins")!.Split(",");
 
