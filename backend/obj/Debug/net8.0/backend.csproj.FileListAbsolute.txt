@@ -282,7 +282,6 @@ C:/Users/tawan/Documents/GitHub/Pre_work/backend/obj/Debug/net8.0/ref/backend.dl
 /Users/tawan/Documents/GitHub/Pre_work/backend/obj/Debug/net8.0/backend.csproj.CoreCompileInputs.cache
 /Users/tawan/Documents/GitHub/Pre_work/backend/obj/Debug/net8.0/backend.MvcApplicationPartsAssemblyInfo.cs
 /Users/tawan/Documents/GitHub/Pre_work/backend/obj/Debug/net8.0/backend.MvcApplicationPartsAssemblyInfo.cache
-/Users/tawan/Documents/GitHub/Pre_work/backend/obj/Debug/net8.0/backend.sourcelink.json
 /Users/tawan/Documents/GitHub/Pre_work/backend/obj/Debug/net8.0/scopedcss/bundle/backend.styles.css
 /Users/tawan/Documents/GitHub/Pre_work/backend/obj/Debug/net8.0/staticwebassets.build.json
 /Users/tawan/Documents/GitHub/Pre_work/backend/obj/Debug/net8.0/staticwebassets.development.json
