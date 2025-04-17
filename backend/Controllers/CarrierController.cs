@@ -1,7 +1,6 @@
 ﻿using backend.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -11,16 +10,18 @@ namespace backend.Controllers
     [ApiController]
     public class CarrierController : ControllerBase
     {
-        public readonly IConfiguration _configuration;
+        private readonly IConfiguration _configuration;
 
-        public CarrierController(IConfiguration configuration) 
+        public CarrierController(IConfiguration configuration)
         {
             _configuration = configuration;
         }
+
         [HttpGet]
         [Route("GetAllCarriers")]
         public string GetCarriers()
         {
+            // Keep the original implementation for now
             SqlConnection con = new SqlConnection(_configuration.GetConnectionString("StoreDbConnection").ToString());
             SqlDataAdapter da = new SqlDataAdapter("select * from CarrierInfo", con);
             DataTable dt = new DataTable();
@@ -40,19 +41,79 @@ namespace backend.Controllers
                     carrier.Update_Date = Convert.ToDateTime(dt.Rows[i]["Update_Date"]);
                     carrier.Status = Convert.ToString(dt.Rows[i]["Status"]);
                     carrier.Reject_Reason = Convert.ToString(dt.Rows[i]["Reject_Resaon"]);
-                    //carrier.Approve_Date = Convert.ToDateTime(dt.Rows[i]["Approve_Date"]);
                     carrierList.Add(carrier);
                 }
             }
             if (carrierList.Count > 0)
-                return JsonConvert.SerializeObject(carrierList);
+                return System.Text.Json.JsonSerializer.Serialize(carrierList);
             else
             {
                 responce.SatusCode = 100;
                 responce.ErrorMessage = "No Data Found";
-                return JsonConvert.SerializeObject(responce);
+                return System.Text.Json.JsonSerializer.Serialize(responce);
             }
         }
+
+        // Let's implement just one CQRS-style endpoint to test
+        [HttpPatch]
+        [Route("ApproveCarrier")]
+        public IActionResult ApproveCarrier(string sjpNumber)
+        {
+            using SqlConnection con = new SqlConnection(_configuration.GetConnectionString("StoreDbConnection"));
+            con.Open();
+
+            // Implement the same logic as in the ApproveCarrierCommandHandler
+            SqlCommand getCmd = new SqlCommand("SELECT Status FROM CarrierInfo WHERE SJP_Number = @SjpNumber", con);
+            getCmd.Parameters.AddWithValue("@SjpNumber", sjpNumber);
+            var currentStatus = getCmd.ExecuteScalar()?.ToString()?.ToLower();
+
+            if (currentStatus == null)
+            {
+                return NotFound(new { message = "Carrier not found" });
+            }
+
+            if (currentStatus == "reject")
+            {
+                return BadRequest(new { message = "Status is rejected, cannot approve" });
+            }
+
+            if (string.IsNullOrEmpty(currentStatus) || 
+                !(new[] { "approve 1", "approve 2", "complete" }.Contains(currentStatus)))
+            {
+                currentStatus = "wait for approve";
+            }
+
+            if (currentStatus == "complete")
+            {
+                return BadRequest(new { message = "Already completed" });
+            }
+
+            string nextStatus = currentStatus switch
+            {
+                "wait for approve" => "approve 1",
+                "approve 1" => "approve 2",
+                "approve 2" => "complete",
+                _ => "approve 1"
+            };
+
+            SqlCommand updateCmd;
+            if (nextStatus == "complete")
+            {
+                updateCmd = new SqlCommand("UPDATE CarrierInfo SET Status = @Status, Approve_Date = GETDATE(), Update_Date = GETDATE() WHERE SJP_Number = @SjpNumber", con);
+            }
+            else
+            {
+                updateCmd = new SqlCommand("UPDATE CarrierInfo SET Status = @Status, Update_Date = GETDATE() WHERE SJP_Number = @SjpNumber", con);
+            }
+
+            updateCmd.Parameters.AddWithValue("@SjpNumber", sjpNumber);
+            updateCmd.Parameters.AddWithValue("@Status", nextStatus);
+            updateCmd.ExecuteNonQuery();
+
+            return Ok(new { message = $"Status updated to '{nextStatus}'" });
+        }
+
+        // Keep other original endpoints
         [HttpPost]
         [Route("CreateCarrier")]
         public IActionResult CreateCarrier([FromBody] Carrier carrier)
@@ -105,6 +166,7 @@ namespace backend.Controllers
                 Created_At = now.ToString("yyyy-MM-dd HH:mm:ss")
             });
         }
+
         [HttpDelete]
         [Route("DeleteCarrier/{sjpNumber}")]
         public IActionResult DeleteCarrier(string sjpNumber)
@@ -119,6 +181,7 @@ namespace backend.Controllers
 
             return Ok(new { message = rowsAffected > 0 ? "Carrier Deleted" : "Carrier Not Found" });
         }
+
         [HttpPut]
         [Route("EditCarrier")]
         public IActionResult EditCarrier([FromBody] Carrier carrier)
@@ -138,6 +201,7 @@ namespace backend.Controllers
 
             return Ok(new { message = rowsAffected > 0 ? "Carrier Updated" : "Carrier Not Found" });
         }
+
         [HttpGet]
         [Route("SearchCarriers")]
         public IActionResult SearchCarriers(string? sjpNumber, string? carrierCode, DateTime? createDate, string? status)
@@ -145,7 +209,7 @@ namespace backend.Controllers
             using SqlConnection con = new SqlConnection(_configuration.GetConnectionString("StoreDbConnection"));
             string query = "SELECT * FROM CarrierInfo WHERE 1=1";
 
-            if (!string.IsNullOrEmpty(sjpNumber)) query += " AND SjpNumber = @SjpNumber";
+            if (!string.IsNullOrEmpty(sjpNumber)) query += " AND SJP_Number = @SjpNumber";
             if (!string.IsNullOrEmpty(carrierCode)) query += " AND Carrier_Code = @Carrier_Code";
             if (createDate.HasValue) query += " AND CAST(Create_Date AS DATE) = @Create_Date";
             if (!string.IsNullOrEmpty(status)) query += " AND Status = @Status";
@@ -165,7 +229,7 @@ namespace backend.Controllers
             {
                 carriers.Add(new Carrier
                 {
-                    SjpNumber = row["SjpNumber"].ToString(),
+                    SjpNumber = row["SJP_Number"].ToString(),
                     Carrier_Code = row["Carrier_Code"].ToString(),
                     Carrier_Name = row["Carrier_Name"].ToString(),
                     Create_Date = Convert.ToDateTime(row["Create_Date"]),
@@ -177,64 +241,7 @@ namespace backend.Controllers
 
             return Ok(carriers);
         }
-        [HttpPatch]
-        [Route("ApproveCarrier")]
-        public IActionResult ApproveCarrier(string sjpNumber)
-        {
-            using SqlConnection con = new SqlConnection(_configuration.GetConnectionString("StoreDbConnection"));
-            con.Open();
 
-            SqlCommand getCmd = new SqlCommand("SELECT Status FROM CarrierInfo WHERE SJP_Number = @SjpNumber", con);
-            getCmd.Parameters.AddWithValue("@SjpNumber", sjpNumber);
-            var currentStatus = getCmd.ExecuteScalar()?.ToString()?.ToLower();
-
-            // ✅ First: Prevent approval if rejected
-            if (currentStatus == "reject")
-            {
-                con.Close();
-                return BadRequest(new { message = "status is rejected, cannot approve" });
-            }
-
-            // ✅ Second: Handle empty or invalid status
-            if (string.IsNullOrEmpty(currentStatus) || !(new[] { "approve 1", "approve 2", "complete" }.Contains(currentStatus)))
-            {
-                currentStatus = "wait for approve";
-            }
-
-            if (currentStatus == "complete")
-            {
-                con.Close();
-                return BadRequest(new { message = "already completed" });
-            }
-
-            // ✅ Determine next status
-            string nextStatus = currentStatus switch
-            {
-                "wait for approve" => "approve 1",
-                "approve 1" => "approve 2",
-                "approve 2" => "complete",
-                _ => "approve 1"
-            };
-
-            // ✅ Update logic
-            SqlCommand updateCmd;
-            if (nextStatus == "complete")
-            {
-                // Also update Approve_Date
-                updateCmd = new SqlCommand("UPDATE CarrierInfo SET Status = @Status, Approve_Date = GETDATE(), Update_Date = GETDATE() WHERE SJP_Number = @SjpNumber", con);
-            }
-            else
-            {
-                updateCmd = new SqlCommand("UPDATE CarrierInfo SET Status = @Status, Update_Date = GETDATE() WHERE SJP_Number = @SjpNumber", con);
-            }
-
-            updateCmd.Parameters.AddWithValue("@SjpNumber", sjpNumber);
-            updateCmd.Parameters.AddWithValue("@Status", nextStatus);
-            updateCmd.ExecuteNonQuery();
-
-            con.Close();
-            return Ok(new { message = $"status updated to '{nextStatus}'" });
-        }
         [HttpPatch]
         [Route("RejectCarrier")]
         public IActionResult RejectCarrier(string sjpNumber)
@@ -265,6 +272,5 @@ namespace backend.Controllers
             con.Close();
             return Ok(new { message = "status updated to 'reject'" });
         }
-
     }
 }

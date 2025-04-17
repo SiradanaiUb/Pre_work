@@ -1,10 +1,11 @@
 import { Component,inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CarrierinfoService } from './carrierinfo.service';
+import {NzTableModule} from 'ng-zorro-antd/table';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet,NzTableModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
