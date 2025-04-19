@@ -1,0 +1,19 @@
+<form nz-form [nzLayout]="'vertical'">
+     <!-- Carrier Name -->
+    <nz-form-item>
+        <nz-form-label [nzFor]="'carrierName'" nzRequired>Carrier Name</nz-form-label>
+        <nz-form-control>
+            <input
+                nz-input
+                id="carrierName"
+                name="carrierName"
+                placeholder="Enter Carrier Name"
+                [(ngModel)]="newCarrierInfoList.carrierName"
+                required
+            />
+        </nz-form-control>
+    </nz-form-item>
+  
+     <!-- Submit Button -->
+     <button nz-button nzType="primary" (click)="onSave()">Create Carrier</button>
+</form>
