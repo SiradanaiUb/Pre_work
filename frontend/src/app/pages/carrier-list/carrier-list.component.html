@@ -1,4 +1,89 @@
-<div class="search-container">
-    <span>Search</span>
-    <input type="text" [(ngModel)]="enteredSearchValue" (input)="onsearchTextChanged()">
-</div>
+<form nz-form [nzLayout]="'vertical'" (ngSubmit)="onSubmit()">
+    <!-- SJP Number -->
+    <nz-form-item>
+      <nz-form-label [nzFor]="'sjpNumber'">SJP Number</nz-form-label>
+      <nz-form-control>
+        <input
+          nz-input
+          id="sjpNumber"
+          name="sjpNumber"
+          [(ngModel)]="sjpNumber"
+          placeholder="Enter SJP Number"
+        />
+      </nz-form-control>
+    </nz-form-item>
+  
+    <!-- Carrier Code -->
+    <nz-form-item>
+      <nz-form-label [nzFor]="'carrierCode'">Carrier Code</nz-form-label>
+      <nz-form-control>
+        <input
+          nz-input
+          id="carrierCode"
+          name="carrierCode"
+          [(ngModel)]="carrierCode"
+          placeholder="Enter Carrier Code"
+        />
+      </nz-form-control>
+    </nz-form-item>
+  
+    <!-- Create Date -->
+    <nz-form-item>
+      <nz-form-label [nzFor]="'createDate'">Create Date</nz-form-label>
+      <nz-form-control>
+        <nz-date-picker
+          [(ngModel)]="createDate"
+          name="createDate"
+          id="createDate"
+          style="width: 100%;"
+        ></nz-date-picker>
+      </nz-form-control>
+    </nz-form-item>
+  
+    <!-- Status -->
+    <nz-form-item>
+      <nz-form-label [nzFor]="'status'">Status</nz-form-label>
+      <nz-form-control>
+        <nz-select
+          [(ngModel)]="status"
+          name="status"
+          id="status"
+          placeholder="Select Status"
+        >
+          <nz-option nzValue="Pending" nzLabel="Pending"></nz-option>
+          <nz-option nzValue="Approved" nzLabel="Approved"></nz-option>
+          <nz-option nzValue="Rejected" nzLabel="Rejected"></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+  
+    <button nz-button nzType="primary">Search</button>
+  </form>
+  
+  <!-- Results Section -->
+  <nz-table
+    *ngIf="searchResults.length > 0"
+    [nzData]="searchResults"
+    [nzBordered]="true"
+    [nzSize]="'middle'"
+    [nzShowPagination]="false"
+    class="results-table"
+  >
+    <thead>
+      <tr>
+        <th>SJP Number</th>
+        <th>Carrier Code</th>
+        <th>Create Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of searchResults">
+        <td>{{ item.sjpNumber }}</td>
+        <td>{{ item.carrierCode }}</td>
+        <td>{{ item.createDate | date: 'mediumDate' }}</td>
+        <td>{{ item.status }}</td>
+      </tr>
+    </tbody>
+  </nz-table>
+  
