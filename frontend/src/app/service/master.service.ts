@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -18,8 +18,19 @@ export class MasterService {
   }
 
   getSearchResults(query: any): Observable<any[]> {
-    return this.http.post<any[]>('http://localhost:5146/api/Carrier/api/SearchCarrier', query);
+    const params = new HttpParams()
+      .set('sjpNumber', query.sjpNumber || '')
+      .set('carrierCode', query.carrierCode || '')
+      .set('createDate', query.createDate ? query.createDate.toISOString() : '')
+      .set('status', query.status || '');
+  
+    return this.http.get<any[]>('http://localhost:5146/api/Carrier/SearchCarriers', { params });
   }
+
+  getAllCarriers(): Observable<any[]> {
+    return this.http.get<any[]>('http://localhost:5146/api/Carrier/GetAllCarriers');
+  }
+  
 
   editCarrier(obj: any) {
     return this.http.put('http://localhost:5146/api/Carrier/EditCarrier', obj, {

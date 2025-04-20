@@ -1,8 +1,15 @@
-<form nz-form [nzLayout]="'vertical'" (ngSubmit)="onSubmit()">
-    <!-- SJP Number -->
-    <nz-form-item>
-      <nz-form-label [nzFor]="'sjpNumber'">SJP Number</nz-form-label>
-      <nz-form-control>
+<div class="carrier-box">
+  <h2 class="form-title">Search SJP</h2>
+
+  <form
+    nz-form
+    [nzLayout]="'vertical'"
+    (ngSubmit)="onSubmit()"
+    class="search-form"
+  >
+    <div class="search-row">
+      <div class="search-field">
+        <label for="sjpNumber">SJP Number</label>
         <input
           nz-input
           id="sjpNumber"
@@ -10,13 +17,10 @@
           [(ngModel)]="sjpNumber"
           placeholder="Enter SJP Number"
         />
-      </nz-form-control>
-    </nz-form-item>
-  
-    <!-- Carrier Code -->
-    <nz-form-item>
-      <nz-form-label [nzFor]="'carrierCode'">Carrier Code</nz-form-label>
-      <nz-form-control>
+      </div>
+
+      <div class="search-field">
+        <label for="carrierCode">Carrier Code</label>
         <input
           nz-input
           id="carrierCode"
@@ -24,26 +28,20 @@
           [(ngModel)]="carrierCode"
           placeholder="Enter Carrier Code"
         />
-      </nz-form-control>
-    </nz-form-item>
-  
-    <!-- Create Date -->
-    <nz-form-item>
-      <nz-form-label [nzFor]="'createDate'">Create Date</nz-form-label>
-      <nz-form-control>
+      </div>
+
+      <div class="search-field">
+        <label for="createDate">Create Date</label>
         <nz-date-picker
           [(ngModel)]="createDate"
           name="createDate"
           id="createDate"
           style="width: 100%;"
         ></nz-date-picker>
-      </nz-form-control>
-    </nz-form-item>
-  
-    <!-- Status -->
-    <nz-form-item>
-      <nz-form-label [nzFor]="'status'">Status</nz-form-label>
-      <nz-form-control>
+      </div>
+
+      <div class="search-field">
+        <label for="status">Status</label>
         <nz-select
           [(ngModel)]="status"
           name="status"
@@ -54,36 +52,42 @@
           <nz-option nzValue="Approved" nzLabel="Approved"></nz-option>
           <nz-option nzValue="Rejected" nzLabel="Rejected"></nz-option>
         </nz-select>
-      </nz-form-control>
-    </nz-form-item>
-  
-    <button nz-button nzType="primary">Search</button>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button nz-button nzType="primary" [nzLoading]="loading">Search</button>
+      <button nz-button type="button" (click)="clearSearch()">Clear</button>
+    </div>
   </form>
-  
-  <!-- Results Section -->
-  <nz-table
-    *ngIf="searchResults.length > 0"
-    [nzData]="searchResults"
-    [nzBordered]="true"
-    [nzSize]="'middle'"
-    [nzShowPagination]="false"
-    class="results-table"
-  >
-    <thead>
-      <tr>
-        <th>SJP Number</th>
-        <th>Carrier Code</th>
-        <th>Create Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let item of searchResults">
-        <td>{{ item.sjpNumber }}</td>
-        <td>{{ item.carrierCode }}</td>
-        <td>{{ item.createDate | date: 'mediumDate' }}</td>
-        <td>{{ item.status }}</td>
-      </tr>
-    </tbody>
-  </nz-table>
-  
+
+  <!-- Scrollable Table -->
+  <div class="scrollable-table-container">
+    <nz-table
+      [nzData]="searchResults"
+      [nzBordered]="true"
+      [nzSize]="'middle'"
+      [nzShowPagination]="true"
+      [nzPageSize]="10"
+      [nzLoading]="loading"
+      class="results-table"
+    >
+      <thead>
+        <tr>
+          <th>SJP Number</th>
+          <th>Carrier Code</th>
+          <th>Create Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of searchResults">
+          <td>{{ item.sjpNumber }}</td>
+          <td>{{ item.carrier_Code }}</td>
+          <td>{{ item.create_Date | date: 'mediumDate' }}</td>
+          <td>{{ item.status }}</td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </div>
+</div>

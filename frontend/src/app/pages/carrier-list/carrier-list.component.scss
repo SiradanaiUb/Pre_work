@@ -1,17 +1,70 @@
-form {
-    max-width: 500px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.carrier-box {
+  max-width: 1000px;
+  height: 90vh;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.form-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.search-form {
+  flex-shrink: 0;
+}
+
+.search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.search-field {
+  flex: 1 1 200px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+
+  label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
   }
-  
-button[nz-button] {
+
+  input,
+  nz-select,
+  nz-date-picker {
     width: 100%;
-    margin-top: 1rem;
   }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+
+  button[nz-button] {
+    width: 120px;
+  }
+}
+
+.scrollable-table-container {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 1rem;
+}
+
 .results-table {
-    margin-top: 2rem;
-  }
-    
+  min-width: 800px;
+}
+
+

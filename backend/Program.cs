@@ -33,10 +33,14 @@ var allowedOrigins = builder.Configuration.GetValue<string>("allowOrigins")!.Spl
 
 builder.Services.AddCors(option =>
 {
-    option.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod();
-    });
+    option.AddPolicy("AllowLocalhost4200",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    );
 });
 
 var app = builder.Build();
@@ -49,7 +53,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors();
+app.UseCors("AllowLocalhost4200");
 app.UseAuthorization();
 app.MapControllers();
 

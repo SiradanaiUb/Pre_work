@@ -18,41 +18,27 @@ namespace backend.Queries.SearchCarriersQuery
 
         public async Task<IEnumerable<CarrierDto>> Handle(SearchCarriersQuery query)
         {
-            // Get all carriers if we need to do partial matching on SjpNumber
             if (!string.IsNullOrEmpty(query.SjpNumber))
             {
+                // Fetch all carriers to allow partial match on SjpNumber
                 var allCarriers = await _repository.GetAllCarriers();
-                
-                // Apply partial matching for SjpNumber
-                var filteredCarriers = allCarriers.Where(c => 
-                    c.SjpNumber != null && 
-                    c.SjpNumber.Contains(query.SjpNumber, StringComparison.OrdinalIgnoreCase)).ToList();
-                
-                // Apply any other filters if needed
-                if (!string.IsNullOrEmpty(query.CarrierCode))
-                {
-                    filteredCarriers = filteredCarriers.Where(c => 
-                        c.Carrier_Code == query.CarrierCode).ToList();
-                }
-                
-                if (query.CreateDate.HasValue)
-                {
-                    filteredCarriers = filteredCarriers.Where(c => 
-                        c.Create_Date.HasValue && 
-                        c.Create_Date.Value.Date == query.CreateDate.Value.Date).ToList();
-                }
-                
-                if (!string.IsNullOrEmpty(query.Status))
-                {
-                    filteredCarriers = filteredCarriers.Where(c => 
-                        c.Status == query.Status).ToList();
-                }
-                
+
+                var filteredCarriers = allCarriers.Where(c =>
+                    (string.IsNullOrEmpty(query.SjpNumber) || 
+                        (c.SjpNumber != null && c.SjpNumber.Contains(query.SjpNumber, StringComparison.OrdinalIgnoreCase))) &&
+                    (string.IsNullOrEmpty(query.CarrierCode) || 
+                        c.Carrier_Code == query.CarrierCode) &&
+                    (!query.CreateDate.HasValue || 
+                        (c.Create_Date.HasValue && c.Create_Date.Value.Date == query.CreateDate.Value.Date)) &&
+                    (string.IsNullOrEmpty(query.Status) || 
+                        c.Status == query.Status)
+                ).ToList();
+
                 return filteredCarriers;
             }
             else
             {
-                // If not doing partial matching on SjpNumber, use the repository's search method
+                // Use optimized repository query when partial match not needed
                 return await _repository.SearchCarriers(
                     query.SjpNumber,
                     query.CarrierCode,

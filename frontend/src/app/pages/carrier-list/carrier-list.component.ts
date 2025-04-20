@@ -8,51 +8,96 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { CommonModule } from '@angular/common';
+import { NzPaginationModule } from 'ng-zorro-antd/pagination';
+
+interface CarrierDto {
+  sjpNumber: string;
+  carrier_Code: string;
+  create_Date: Date;
+  status: string;
+}
 
 @Component({
   selector: 'app-carrier-list',
-  imports: [FormsModule, NzFormModule, NzInputModule, NzButtonModule, NzDatePickerModule, NzSelectModule, NzTableModule, CommonModule],
+  imports: [FormsModule, NzFormModule, NzInputModule, NzButtonModule, NzDatePickerModule, NzSelectModule, NzTableModule, CommonModule, NzPaginationModule],
   templateUrl: './carrier-list.component.html',
-  styleUrl: './carrier-list.component.scss'
+  styleUrl: './carrier-list.component.scss',
+  standalone: true
 })
 export class CarrierListComponent implements OnInit {
   // These properties match the SearchCarriersQuery model in the backend
   sjpNumber: string | null = null;
   carrierCode: string | null = null;
-  createDate: Date | null = null;
+  createDate: string | null = null;
   status: string | null = null;
   
   masterSrv = inject(MasterService);
-  searchResults: any[] = [];
+  searchResults: CarrierDto[] = [];
   loading = false;
+  pageIndex = 1;
+  pageSize = 10;
 
   ngOnInit(): void {
-    // Optional: Load initial data or status options
-  }
-
-  onSubmit(): void {
     this.loading = true;
-    
-    // Create query object matching the SearchCarriersQuery model
-    const query = {
-      sjpNumber: this.sjpNumber,
-      carrierCode: this.carrierCode,
-      createDate: this.createDate, // Angular's Date will serialize to DateTime in backend
-      status: this.status
-    };
-
-    // Call the service method to get search results
-    this.masterSrv.getSearchResults(query).subscribe({
+    this.masterSrv.getAllCarriers().subscribe({
       next: (results) => {
         this.searchResults = results;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error searching carriers:', error);
+        console.error('Error loading carriers:', error);
         this.loading = false;
       }
     });
   }
+  
+
+  onSubmit(): void {
+    this.loading = true;
+  
+    // Check if all search fields are empty
+    const isEmpty =
+      !this.sjpNumber &&
+      !this.carrierCode &&
+      !this.createDate &&
+      !this.status;
+  
+    if (isEmpty) {
+      // Call GetAllCarriers when no filters are provided
+      this.masterSrv.getAllCarriers().subscribe({
+        next: (results) => {
+          this.searchResults = results;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error fetching all carriers:', error);
+          this.loading = false;
+          this.searchResults = [];
+        }
+      });
+    } else {
+      // Prepare search query object
+      const query = {
+        sjpNumber: this.sjpNumber,
+        carrierCode: this.carrierCode,
+        createDate: this.createDate,
+        status: this.status
+      };
+  
+      this.masterSrv.getSearchResults(query).subscribe({
+        next: (results) => {
+          this.searchResults = results;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error searching carriers:', error);
+          this.loading = false;
+          this.searchResults = [];
+        }
+      });
+    }
+  }
+  
 
   // Clear search form
   clearSearch(): void {
@@ -60,5 +105,16 @@ export class CarrierListComponent implements OnInit {
     this.carrierCode = null;
     this.createDate = null;
     this.status = null;
+    this.searchResults = [];
   }
+
+  get pagedResults() {
+    const start = (this.pageIndex - 1) * this.pageSize;
+      return this.searchResults.slice(start, start + this.pageSize);
+  }
+
+  onPageChange(page: number): void {
+    this.pageIndex = page;
+  }
+  
 }
